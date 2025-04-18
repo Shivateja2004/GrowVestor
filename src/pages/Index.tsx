@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -53,7 +52,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="md:w-1/2 mb-10 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 fade-in">
-                SmartInvest Buddy
+                GrowVestor
               </h1>
               <p className="text-xl md:text-2xl font-light mb-8 max-w-lg fade-in">
                 Your AI-powered investment advisor to help you make smarter financial decisions

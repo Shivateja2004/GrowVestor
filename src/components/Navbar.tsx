@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <TrendingUp className="h-8 w-8 text-primary" />
-              <span className="ml-2 text-xl font-bold text-gray-900">SmartInvest Buddy</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">GrowVestor</span>
             </Link>
           </div>
 

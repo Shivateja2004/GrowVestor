@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -8,7 +7,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">SmartInvest Buddy</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">GrowVestor</h2>
             <p className="text-gray-600">
               Your AI-powered investment advisor to make smarter financial decisions.
             </p>
@@ -67,7 +66,7 @@ const Footer = () => {
         </div>
         <div className="mt-8 border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} SmartInvest Buddy. All rights reserved.
+            &copy; {new Date().getFullYear()} GrowVestor. All rights reserved.
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-gray-500">

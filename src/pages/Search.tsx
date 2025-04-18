@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Search as SearchIcon, 
   TrendingUp, 
@@ -8,12 +7,17 @@ import {
   DollarSign,
   Users,
   Briefcase,
-  BarChart
+  BarChart,
+  FileUp,
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -28,8 +32,15 @@ import {
 } from 'recharts';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-// Mock financial data
 const mockStockData = [
   { name: 'Jan', value: 400 },
   { name: 'Feb', value: 300 },
@@ -110,18 +121,118 @@ const mockCompanies = [
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [reportAnalysis, setReportAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  const fileInputRef = useRef(null);
+  const { toast } = useToast();
   
   const handleSearch = (e) => {
     e.preventDefault();
-    // Mock search functionality
     if (searchQuery.toLowerCase().includes('apple')) {
       setSelectedCompany(mockCompanies[0]);
     } else if (searchQuery.toLowerCase().includes('microsoft')) {
       setSelectedCompany(mockCompanies[1]);
     } else if (searchQuery.trim() !== '') {
-      // If no specific match but search isn't empty, show first company as example
       setSelectedCompany(mockCompanies[0]);
     }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    handleFileUpload(file);
+  };
+
+  const handleFileUpload = (file) => {
+    if (!file) return;
+    
+    const allowedTypes = ['application/pdf', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF or Excel file containing financial reports",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file less than 10MB in size",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadedFile(file);
+    toast({
+      title: "File uploaded",
+      description: `"${file.name}" has been uploaded successfully.`,
+    });
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    handleFileUpload(file);
+  };
+
+  const handleAnalyzeReport = () => {
+    if (!uploadedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please upload a financial report to analyze",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      
+      const mockAnalysis = {
+        summary: "Based on the financial report analysis, the company shows strong profitability with improving margins. Revenue growth is consistent at 12% year-over-year. The debt-to-equity ratio is healthy at 0.8.",
+        keyMetrics: {
+          profitMargin: "18.5%",
+          revenueGrowth: "12.0%",
+          debtToEquity: "0.8",
+          cashPosition: "$1.2B",
+          returnOnEquity: "22.7%"
+        },
+        riskFactors: [
+          "Increasing competition in primary markets",
+          "Potential regulatory challenges in European region",
+          "Foreign exchange exposure"
+        ],
+        investmentRecommendation: "Invest",
+        confidenceScore: 76
+      };
+      
+      setReportAnalysis(mockAnalysis);
+      setIsUploadDialogOpen(false);
+      
+      toast({
+        title: "Analysis Complete",
+        description: "The financial report has been analyzed successfully.",
+      });
+    }, 2000);
   };
 
   return (
@@ -149,13 +260,23 @@ const Search = () => {
                 Search
               </Button>
             </form>
+            
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                className="bg-white/20 text-white border-white hover:bg-white/30 hover:text-white"
+                onClick={() => setIsUploadDialogOpen(true)}
+              >
+                <FileUp className="h-4 w-4 mr-2" />
+                Upload Financial Report
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {selectedCompany ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Company Overview */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
             <div className="flex flex-col md:flex-row md:items-center">
               <div className="flex items-center mb-4 md:mb-0">
@@ -202,7 +323,6 @@ const Search = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              {/* Stock Chart */}
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -231,7 +351,6 @@ const Search = () => {
                 </CardContent>
               </Card>
 
-              {/* Financial Data */}
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -258,7 +377,6 @@ const Search = () => {
             </div>
 
             <div>
-              {/* AI Investment Suggestion */}
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -304,7 +422,6 @@ const Search = () => {
                 </CardContent>
               </Card>
 
-              {/* Key Metrics */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -340,50 +457,193 @@ const Search = () => {
         </div>
       ) : (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <div className="mb-8">
-            <SearchIcon className="mx-auto h-12 w-12 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-semibold mb-2">Search for a company to get started</h2>
-          <p className="text-gray-600 mb-8">
-            Try searching for companies like "Apple" or "Microsoft" to see detailed financial data and AI-powered insights.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
-                  <SearchIcon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-lg mb-2">Search Any Company</h3>
-                <p className="text-gray-600 text-sm">
-                  Get comprehensive data on any publicly traded company by name or ticker symbol
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-lg mb-2">Get AI Insights</h3>
-                <p className="text-gray-600 text-sm">
-                  Receive AI-powered investment recommendations based on company performance
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
-                  <LineChart className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-medium text-lg mb-2">Track Performance</h3>
-                <p className="text-gray-600 text-sm">
-                  View detailed financial metrics and historical performance data
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          {reportAnalysis ? (
+            <div>
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                    AI Financial Report Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-4 border border-blue-100 bg-blue-50 rounded-lg mb-6">
+                    <h3 className="font-semibold mb-2">Analysis Summary</h3>
+                    <p className="text-gray-700">{reportAnalysis.summary}</p>
+                  </div>
+                  
+                  <h3 className="font-semibold mb-2">Key Financial Metrics</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    {Object.entries(reportAnalysis.keyMetrics).map(([key, value]) => (
+                      <div key={key} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-sm text-gray-500 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </div>
+                        <div className="font-semibold">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <h3 className="font-semibold mb-2">Risk Factors</h3>
+                  <ul className="mb-6 space-y-2">
+                    {reportAnalysis.riskFactors.map((factor, index) => (
+                      <li key={index} className="flex items-start">
+                        <AlertCircle className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
+                        <span>{factor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <h3 className="font-semibold">Investment Recommendation</h3>
+                      <div className="flex items-center mt-1">
+                        <Badge className={`${
+                          reportAnalysis.investmentRecommendation === 'Invest' ? 'bg-green-500' : 
+                          reportAnalysis.investmentRecommendation === 'Hold' ? 'bg-yellow-500' : 'bg-red-500'
+                        } text-lg py-1 px-4`}>
+                          {reportAnalysis.investmentRecommendation}
+                        </Badge>
+                        <div className="ml-3 text-sm text-gray-600">
+                          Confidence: {reportAnalysis.confidenceScore}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button>View Detailed Report</Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Button onClick={() => setReportAnalysis(null)}>
+                Analyze Another Report
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <div className="mb-8">
+                <SearchIcon className="mx-auto h-12 w-12 text-gray-400" />
+              </div>
+              <h2 className="text-2xl font-semibold mb-2">Search for a company to get started</h2>
+              <p className="text-gray-600 mb-8">
+                Try searching for companies like "Apple" or "Microsoft" to see detailed financial data and AI-powered insights.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
+                      <SearchIcon className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-medium text-lg mb-2">Search Any Company</h3>
+                    <p className="text-gray-600 text-sm">
+                      Get comprehensive data on any publicly traded company by name or ticker symbol
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-medium text-lg mb-2">Get AI Insights</h3>
+                    <p className="text-gray-600 text-sm">
+                      Receive AI-powered investment recommendations based on company performance
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-center mb-4 h-10 w-10 rounded-full bg-blue-100 mx-auto">
+                      <LineChart className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-medium text-lg mb-2">Track Performance</h3>
+                    <p className="text-gray-600 text-sm">
+                      View detailed financial metrics and historical performance data
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
         </div>
       )}
+      
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload Financial Report</DialogTitle>
+            <DialogDescription>
+              Upload a company's financial report to analyze using our AI model
+            </DialogDescription>
+          </DialogHeader>
+
+          <div 
+            className={`border-2 border-dashed rounded-lg p-6 text-center ${
+              isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <Upload className="h-10 w-10 text-gray-400 mb-2" />
+              
+              {uploadedFile ? (
+                <div>
+                  <p className="font-medium text-gray-900">{uploadedFile.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-gray-900">
+                    Drag and drop file here, or click to select file
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Support for PDF, Excel (.xls, .xlsx), max 10MB
+                  </p>
+                </>
+              )}
+              
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden"
+                onChange={handleFileInputChange}
+                accept=".pdf,.xls,.xlsx"
+              />
+              
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => fileInputRef.current.click()}
+              >
+                Select File
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row sm:justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setUploadedFile(null);
+                setIsUploadDialogOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAnalyzeReport} 
+              disabled={!uploadedFile || isAnalyzing}
+              className="sm:ml-4 mt-2 sm:mt-0"
+            >
+              {isAnalyzing ? "Analyzing..." : "Analyze Report"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
